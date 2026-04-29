@@ -7,7 +7,7 @@ sudo apt install python3-pip -y
 pip install -U pip
 git clone https://github.com/EdjeElectronics/Train-and-Deploy-YOLO-Models.git yolo
 cd yolo
-bash utils/jetson_install_yolo.sh ( nhớ gỡ openCV)
+bash utils/jetson_install_yolo.sh ( nhớ gỡ openCV) pip3 uninstall opencv-python==4.10.0.82
 sudo reboot now
 
 
