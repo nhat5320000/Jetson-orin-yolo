@@ -21,8 +21,49 @@ sudo apt install python3-libgpiod
 pip install uvicorn
 pip install fastapi
 http://<JETSON_IP>:8000/video
+sudo apt install nano
 sudo /opt/nvidia/jetson-io/jetson-io.py 
 Check lại camera usb (gỡ opencv để chạy camera csi)
 Check GPIO
 train lại số 1 theo yolo26s
 Down Jetpack 6.1
+
+
+!!!Auto start
+1.Tạo file shell để chạy Python:
+  + sudo nano /usr/local/bin/start_yolo.sh
+2.Nội dung:
+  + #!/bin/bash
+
+  + # Đợi vài giây để hệ thống ổn định (nếu cần)
+    sleep 10
+
+  + # Chạy Python script
+    /usr/bin/python /home/vvqn/1.py
+3. Cấp quyền:
+  +sudo chmod +x /usr/local/bin/start_yolo.sh
+4. Tạo file service:
+  +sudo nano /etc/systemd/system/yolo.service
+5. Nội dung:
+  [Unit]
+  Description=YOLO Auto Start
+
+  [Service]
+  ExecStart=/usr/local/bin/start_yolo.sh
+  Restart=always
+  User=vvqn
+  WorkingDirectory=/home/vvqn
+
+  [Install]
+  WantedBy=multi-user.target
+6. Kích Hoạt
+  sudo systemctl daemon-reload
+  sudo systemctl enable yolo.service
+  sudo systemctl start yolo.service
+7. tùy chỉnh:
+  sudo systemctl stop yolo.service (dừng)
+  sudo systemctl start yolo.service (bật)
+  sudo systemctl restart yolo.service (rstart ctr)
+  sudo systemctl disable yolo.service (tắt auto start )
+  sudo systemctl status yolo.service (xem status)
+  sudo journalctl -u yolo.service -f (xem log terminal)
