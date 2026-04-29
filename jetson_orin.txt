@@ -1,0 +1,28 @@
+
+
+
+
+sudo apt update && sudo apt upgrade -y( ko cần update)
+sudo apt install python3-pip -y
+pip install -U pip
+git clone https://github.com/EdjeElectronics/Train-and-Deploy-YOLO-Models.git yolo
+cd yolo
+bash utils/jetson_install_yolo.sh ( nhớ gỡ openCV)
+sudo reboot now
+
+
+cd yolo 
+yolo export model=yolo26s.pt format=engine half=True
+python yolo_detect.py --model=yolo26s.engine --source=usb0 --resolution=1280x960(chạy code mh đi)
+python yolo_detect.py --model=train_tracker2.engine --source=train_video1.mp4
+
+
+sudo apt install python3-libgpiod
+pip install uvicorn
+pip install fastapi
+
+sudo /opt/nvidia/jetson-io/jetson-io.py 
+Check lại camera usb (gỡ opencv để chạy camera csi)
+Check GPIO
+train lại số 1 theo yolo26s
+Down Jetpack 6.1
