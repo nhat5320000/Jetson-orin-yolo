@@ -20,7 +20,7 @@ python yolo_detect.py --model=train_tracker2.engine --source=train_video1.mp4
 sudo apt install python3-libgpiod
 pip install uvicorn
 pip install fastapi
-
+http://<JETSON_IP>:8000/video
 sudo /opt/nvidia/jetson-io/jetson-io.py 
 Check lại camera usb (gỡ opencv để chạy camera csi)
 Check GPIO
