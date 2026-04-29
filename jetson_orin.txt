@@ -1,6 +1,6 @@
 
 
-
+git clone 
 
 sudo apt update && sudo apt upgrade -y( ko cần update)
 sudo apt install python3-pip -y
