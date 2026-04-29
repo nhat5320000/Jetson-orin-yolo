@@ -1,6 +1,6 @@
 
 
-git clone 
+git clone https://github.com/nhat5320000/Jetson-orin-yolo.git
 
 sudo apt update && sudo apt upgrade -y( ko cần update)
 sudo apt install python3-pip -y
