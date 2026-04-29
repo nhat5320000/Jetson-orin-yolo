@@ -28,7 +28,7 @@ Check GPIO
 train lại số 1 theo yolo26s
 Down Jetpack 6.1
 
-
+sudo apt install nano
 !!!Auto start
 1.Tạo file shell để chạy Python:
   + sudo nano /usr/local/bin/start_yolo.sh
