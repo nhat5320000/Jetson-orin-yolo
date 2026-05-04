@@ -67,3 +67,5 @@ sudo apt install nano
   sudo systemctl disable yolo.service (tắt auto start )
   sudo systemctl status yolo.service (xem status)
   sudo journalctl -u yolo.service -f (xem log terminal)
+
+vvqn@vvqn-desktop:/home$ scp -r vvqn@192.168.4.75:/home/vvqn/captures copy(gõ trên cmd lap)
