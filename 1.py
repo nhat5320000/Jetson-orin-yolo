@@ -19,8 +19,8 @@ def gpio_set(state):
 # ==========================
 # YOLO MODEL
 # ==========================
-model_number1 = YOLO("yolov11_last.engine")
-NUMBER1_CLASS_NAME = "Eye"
+model_number1 = YOLO("14.engine")
+NUMBER1_CLASS_NAME = "OK"
 
 # ===== FLAGS =====
 detecting = True
@@ -192,7 +192,7 @@ while True:
     # Ảnh cho AI và web stream
     frame_resized = cv2.resize(frame, (2048, 1152))
     #frame_resized = cv2.resize(frame, (1280, 1280))
-    result = model_number1(frame, conf=0.005)
+    result = model_number1(frame_resized, conf=0.5)
     boxes = result[0].boxes
 
     count_number1 = 0
