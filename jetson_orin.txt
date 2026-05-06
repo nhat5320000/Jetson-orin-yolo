@@ -22,7 +22,7 @@ pip install uvicorn
 pip install fastapi
 http://<JETSON_IP>:8000/video
 sudo apt install nano
-sudo /opt/nvidia/jetson-io/jetson-io.py 
+sudo /opt/nvidia/jetson-io/jetson-io.py (on chân 13)
 Check lại camera usb (gỡ opencv để chạy camera csi)
 Check GPIO
 train lại số 1 theo yolo26s
@@ -68,4 +68,4 @@ sudo apt install nano
   sudo systemctl status yolo.service (xem status)
   sudo journalctl -u yolo.service -f (xem log terminal)
 
-scp -r vvqn@192.168.4.75:/home/vvqn/captures D:\Desktop\hhh
+scp -r vvqn@192.168.4.75:/home/vvqn/captures D:\Desktop\hh
