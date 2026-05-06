@@ -4,22 +4,23 @@ import threading
 import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
-import gpiod
+from fastapi.responses import HTMLResponse
+import os
+os.environ['JETSON_MODEL_NAME'] = 'JETSON_ORIN_NANO'
+
+import Jetson.GPIO as GPIO
+import time
+# Khai báo chân vật lý
+GPIO.setmode(GPIO.BOARD)
+
+# Chọn chân output
+led_pin = 13
+GPIO.setup(led_pin, GPIO.OUT)
 
 # ==========================
-#  GPIO (libgpiod) SETUP
+# YOLO MODEL, đăt theo tên train
 # ==========================
-chip = gpiod.Chip('gpiochip0') 
-line = chip.get_line(11)   # <-- THAY SỐ "36" thành GPIO line bạn kiểm tra được
-line.request(consumer="yolo_out", type=gpiod.LINE_REQ_DIR_OUT)
-
-def gpio_set(state):
-    line.set_value(1 if state else 0)
-
-# ==========================
-# YOLO MODEL
-# ==========================
-model_number1 = YOLO("14.engine")
+model_number1 = YOLO("20.engine")
 NUMBER1_CLASS_NAME = "OK"
 
 # ===== FLAGS =====
@@ -33,7 +34,10 @@ frame_lock = threading.Lock()
 app = FastAPI()
 raw_frame = None
 
-from fastapi.responses import HTMLResponse
+# ===== DEBOUNCE VARIABLES =====
+stable_counter = 0
+stable_count = -1  # -1: NG, 3: OK
+STABLE_FRAMES = 2  # Cần 5 frame liên tiếp để xác nhận(1=>5)
 
 @app.get("/capture")
 def capture_image():
@@ -49,7 +53,7 @@ def capture_image():
     filename = f"capture_{int(time.time())}.jpg"
     filepath = os.path.join(save_dir, filename)
 
-    cv2.imwrite(filepath, raw_frame)   # LƯU ẢNH GỐC
+    cv2.imwrite(filepath, raw_frame)
     print("📸 Saved:", filepath)
 
     return {"status": "saved", "file": filepath}
@@ -154,7 +158,6 @@ def run_server():
 def open_camera():
     global cap
     gst_str = (
-    #"nvarguscamerasrc ! "
     "nvarguscamerasrc aeantibanding=3 aelock=false exposuretimerange=\"50000 80000000\" gainrange=\"1 16\" ! "
     "video/x-raw(memory:NVMM), width=(int)1920, height=(int)1080, format=(string)NV12, framerate=(fraction)30/1 ! "
     "nvvidconv noise-reduction=4 ! "
@@ -163,14 +166,6 @@ def open_camera():
     "videoconvert ! "
     "video/x-raw, format=(string)BGR ! appsink"
 )
-    #gst_str = (
-    #"nvarguscamerasrc ! "
-    #"video/x-raw(memory:NVMM), width=(int)1920, height=(int)1080, format=(string)NV12, framerate=(fraction)30/1 ! "
-    #"nvvidconv flip-method=0 ! "
-    #"video/x-raw, format=(string)BGRx ! "
-    #"videoconvert ! "
-    #"video/x-raw, format=(string)BGR ! appsink"
-#)
     cap = cv2.VideoCapture(gst_str, cv2.CAP_GSTREAMER)
     if not cap.isOpened():
         print("❌ Không thể mở camera!")
@@ -186,51 +181,65 @@ while True:
     ret, frame = cap.read()
     if not ret:
         break
-    # LƯU ẢNH GỐC TRƯỚC KHI RESIZE
+    
     raw_frame = frame.copy()
-
-    # Ảnh cho AI và web stream
     frame_resized = cv2.resize(frame, (2048, 1152))
-    #frame_resized = cv2.resize(frame, (1280, 1280))
     result = model_number1(frame_resized, conf=0.5)
-    boxes = result[0].boxes
+    
+    if result[0].boxes is not None and len(result[0].boxes) > 0:
+        boxes = result[0].boxes
+        count_number1 = 0
+        
+        for box, cls, conf in zip(boxes.xyxy.int().tolist(),
+                                  boxes.cls.tolist(),
+                                  boxes.conf.tolist()):
+            label = result[0].names[int(cls)]
+            if label == NUMBER1_CLASS_NAME:
+                count_number1 += 1
+                x1, y1, x2, y2 = box
+                cv2.rectangle(frame_resized, (x1, y1), (x2, y2), (0, 128, 255), 2)
+                cv2.putText(frame_resized,
+                            f"{label}:{conf:.2f}",
+                            (x1, y1 - 5),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.7, (0, 128, 255), 2)
+    else:
+        count_number1 = 0
 
-    count_number1 = 0
-    for box, cls, conf in zip(boxes.xyxy.int().tolist(),
-                              boxes.cls.tolist(),
-                              boxes.conf.tolist()):
-        label = result[0].names[int(cls)]
-        if label == NUMBER1_CLASS_NAME:
-            count_number1 += 1
-            x1, y1, x2, y2 = box
-            cv2.rectangle(frame_resized, (x1, y1), (x2, y2), (0, 128, 255), 2)
-            cv2.putText(frame_resized,
-                        f"{label}:{conf:.2f}",
-                        (x1, y1 - 5),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.7, (0, 128, 255), 2)
-
-    # Display count + OK/NG
     cv2.putText(frame_resized,
                 f"Count: {count_number1}",
                 (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
                 1, (255, 255, 255), 2)
 
-    if count_number1 == 3:
-        cv2.putText(frame_resized,
-                    "OK", (10, 70),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1.2, (0, 255, 0), 3)
-        gpio_set(False)  # OFF
-        print("GPIO set to LOW:", line.get_value())
-    else:
-        cv2.putText(frame_resized,
-                    "NG", (10, 70),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1.2, (0, 0, 255), 3)
-        gpio_set(True)   # ON
-        print("GPIO set to HIGH:", line.get_value())
+    # ===== DEBOUNCE LOGIC =====
+    current_state = "OK" if count_number1 == 3 else "NG"
 
+    # smoothing: tăng khi OK, giảm khi NG
+    if current_state == "OK":
+        stable_counter = min(STABLE_FRAMES, stable_counter + 1)
+    else:
+        stable_counter = max(-STABLE_FRAMES, stable_counter - 1)
+
+    # chuyển sang OK
+    if stable_counter == STABLE_FRAMES and stable_count != 3:
+        stable_count = 3
+        GPIO.output(led_pin, GPIO.LOW)
+        print("✅ STABLE OK → GPIO LOW")
+
+    # chuyển sang NG
+    if stable_counter == -STABLE_FRAMES and stable_count != -1:
+        stable_count = -1
+        GPIO.output(led_pin, GPIO.HIGH)
+        print("❌ STABLE NG → GPIO HIGH")
+
+    # ===== HIỂN THỊ OK/NG TRÊN WEB =====
+    if stable_count == 3:
+        cv2.putText(frame_resized, "OK", (10, 70),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
+    else:
+        cv2.putText(frame_resized, "NG", (10, 70),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+                    
     with frame_lock:
         output_frame = frame_resized.copy()
 
@@ -243,5 +252,7 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
+gpio_set(False)
+line.release()
 cap.release()
 cv2.destroyAllWindows()
