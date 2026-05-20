@@ -252,7 +252,7 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-gpio_set(False)
-line.release()
+GPIO.output(led_pin, GPIO.LOW)
+GPIO.clean()
 cap.release()
 cv2.destroyAllWindows()
