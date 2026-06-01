@@ -76,3 +76,8 @@ scp -r vvqn@192.168.4.75:/home/vvqn/captures D:\Desktop\hh
   sudo bash make_partitions.sh     # Sao chép cấu trúc phân vùng từ thẻ SD sang SSD
   sudo bash copy_partitions.sh     # Sao chép toàn bộ dữ liệu từ thẻ SD sang các phân vùng trên SSD[reference:4]
   sudo bash configure_ssd_boot.sh  # Cấu hình hệ thống trên SSD để có thể khởi động[reference:5]
+9.Irayple
+ chmod +x tên_file.run
+ sudo ./tên_file.run
+ /opt/HuarayTech/MVviewer/bin/run.sh
+ sudo /opt/HuarayTech/MVviewer/bin/uninstall.sh
