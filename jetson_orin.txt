@@ -69,3 +69,10 @@ sudo apt install nano
   sudo journalctl -u yolo.service -f (xem log terminal)
 
 scp -r vvqn@192.168.4.75:/home/vvqn/captures D:\Desktop\hh
+8. Chuyển SSD: https://www.youtube.com/watch?v=497u-CcYvE8
+  Clone Repository:
+  git clone https://github.com/jetsonhacks/migrate-jetson-to-ssd.git
+  cd migrate-jetson-to-ssd
+  sudo bash make_partitions.sh     # Sao chép cấu trúc phân vùng từ thẻ SD sang SSD
+  sudo bash copy_partitions.sh     # Sao chép toàn bộ dữ liệu từ thẻ SD sang các phân vùng trên SSD[reference:4]
+  sudo bash configure_ssd_boot.sh  # Cấu hình hệ thống trên SSD để có thể khởi động[reference:5]
